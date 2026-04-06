@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>偏头痛病情记录系统</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+--primary: #2c5f7c; --secondary: #4a90a4; --accent: #e74c3c;
+--bg: #f5f7fa; --card: #ffffff; --text: #333333;
+--border: #e1e8ed; --success: #27ae60;
+}
+body {
+font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif;
+background: var(--bg); color: var(--text); line-height: 1.6;
+}
+.container { max-width: 800px; margin: 0 auto; padding: 20px; }
+header {
+background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+color: white; padding: 30px 20px; text-align: center;
+box-shadow: 0 2px 10px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 100;
+}
+h1 { font-size: 24px; margin-bottom: 10px; font-weight: 600; }
+.subtitle { opacity: 0.9; font-size: 14px; }
+nav { display: flex; justify-content: center; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+.nav-btn {
+padding: 8px 16px; border: 1px solid rgba(255,255,255,0.3);
+background: rgba(255,255,255,0.1); color: white;
+border-radius: 20px; cursor: pointer; transition: all 0.3s; font-size: 14px;
+}
+.nav-btn:hover, .nav-btn.active { background: white; color: var(--primary); }
+.section { display: none; animation: fadeIn 0.3s; }
+.section.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.card {
+background: var(--card); border-radius: 12px; padding: 24px; margin-bottom: 20px;
+box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 1px solid var(--border);
+}
+.card-title {
+font-size: 18px; font-weight: 600; color: var(--primary);
+margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid var(--border);
+display: flex; align-items: center; gap: 8px;
+}
+.form-group { margin-bottom: 20px; }
+label { display: block; font-weight: 500; margin-bottom: 8px; color: #555; font-size: 14px; }
+input, select, textarea {
+width: 100%; padding: 10px 12px; border: 1px solid var(--border);
+border-radius: 8px; font-size: 14px; transition: border 0.3s; font-family: inherit;
+}
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--secondary); }
+textarea { resize: vertical; min-height: 80px; }
+.checkbox-group { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.checkbox-item { display: flex; align-items: center; gap: 6px; padding: 6px; border-radius: 6px; }
+.checkbox-item:hover { background: var(--bg); }
+.checkbox-item input[type="checkbox"] { width: auto; margin: 0; }
+.checkbox-item label { margin: 0; font-weight: normal; cursor: pointer; font-size: 13px; }
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+@media (max-width: 600px) { .row { grid-template-columns: 1fr; } .checkbox-group { grid-template-columns: 1fr; } }
+.btn {
+padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer;
+font-size: 15px; transition: all 0.3s; font-weight: 500; display: inline-flex; align-items: center; gap: 6px;
+}
+.btn-primary { background: var(--primary); color: white; }
+.btn-primary:hover { background: #1e4a63; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(44,95,124,0.3); }
+.btn-secondary { background: #e1e8ed; color: var(--text); }
+.btn-secondary:hover { background: #d1d8dd; }
+.btn-danger { background: var(--accent); color: white; }
+.btn-group { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+.record-item {
+background: var(--card); border-radius: 12px; padding: 20px; margin-bottom: 15px;
+border-left: 4px solid var(--secondary); box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+transition: transform 0.2s;
+}
+.record-item:hover { transform: translateX(5px); box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
+.record-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 10px; }
+.record-date { font-size: 18px; font-weight: 600; color: var(--primary); }
+.record-pain { background: var(--accent); color: white; padding: 4px 12px; border-radius: 20px; font-weight: 600; font-size: 14px; }
+.record-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.tag { background: var(--bg); padding: 4px 10px; border-radius: 4px; font-size: 12px; color: #666; }
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+.stat-card { background: var(--card); padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+.stat-number { font-size: 32px; font-weight: 700; color: var(--primary); margin: 10px 0; }
+.stat-label { color: #666; font-size: 14px; }
+.pain-slider { width: 100%; margin: 10px 0; }
+.pain-value { text-align: center; font-size: 24px; font-weight: 700; color: var(--accent); margin-top: 5px; }
+.empty-state { text-align: center; padding: 60px 20px; color: #999; }
+.modal {
+display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; padding: 20px;
+}
+.modal.active { display: flex; }
+.modal-content {
+background: white; border-radius: 16px; max-width: 600px; width: 100%;
+max-height: 90vh; overflow-y: auto; padding: 30px; position: relative;
+}
+.modal-close { position: absolute; top: 15px; right: 15px; font-size: 24px; cursor: pointer; color: #999; }
+.save-status {
+position: fixed; bottom: 20px; right: 20px; background: var(--success);
+color: white; padding: 12px 20px; border-radius: 8px;
+box-shadow: 0 4px 12px rgba(0,0,0,0.15); display: none; animation: slideIn 0.3s;
+}
+@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+.collapsible { cursor: pointer; user-select: none; }
+.collapsible:after { content: '▼'; float: right; transition: transform 0.3s; }
+.collapsible.active:after { transform: rotate(-180deg); }
+.collapsible-content { max-height: 0; overflow: hidden; transition: max-height 0.3s; }
+.collapsible-content.open { max-height: 2000px; }
+.progress-bar { width: 100%; height: 8px; background: #e1e8ed; border-radius: 4px; overflow: hidden; margin-top: 8px; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, var(--secondary), var(--primary)); transition: width 0.5s; }
+</style>
+</head>
+<body>
+<header>
+<h1>🧠 偏头痛病情记录系统</h1>
+<div class="subtitle">基于《中国偏头痛诊断与治疗指南》设计</div>
+<nav>
+<button class="nav-btn active" onclick="showSection('profile')">基础档案</button>
+<button class="nav-btn" onclick="showSection('new')">新增记录</button>
+<button class="nav-btn" onclick="showSection('history')">历史记录</button>
+<button class="nav-btn" onclick="showSection('stats')">统计分析</button>
+</nav>
+</header>
+<div class="container">
+<section id="profile" class="section active">
+<div class="card">
+<div class="card-title">📋 基础档案（首次填写）</div>
+<form id="profileForm">
+<div class="row">
+<div class="form-group"><label>初始发病年龄（岁）</label><input type="number" id="onsetAge" min="0" max="100"></div>
+<div class="form-group"><label>病史年限（年）</label><input type="number" id="historyYears" min="0"></div>
+</div>
+<div class="form-group"><label>头痛类型</label><select id="headacheType"><option value="single">只有一种类型</option><option value="multiple">多种类型</option></select></div>
+<div class="form-group">
+<label>家族病史</label>
+<div class="checkbox-item"><input type="checkbox" id="familyHistory" onchange="document.getElementById('familyDetail').style.display=this.checked?'block':'none'"><label for="familyHistory">有家族病史</label></div>
+<div id="familyDetail" style="display:none; margin-top:10px;"><input type="text" id="familyDetailText" placeholder="请描述亲属关系及诊断"></div>
+</div>
+<div class="form-group"><label>既往病史</label><textarea id="pastHistory" placeholder="如有其他疾病，请详细描述"></textarea></div>
+<div class="form-group"><label>女性月经周期相关性</label><select id="menstrual"><option value="none">无关/男性</option><option value="before">月经前</option><option value="during">月经期</option><option value="ovulation">排卵期</option><option value="uncertain">不确定</option></select></div>
+<div class="card-title collapsible" onclick="this.classList.toggle('active');this.nextElementSibling.classList.toggle('open')">常见诱发因素（多选）</div>
+<div class="collapsible-content open">
+<div class="checkbox-group">
+<div class="checkbox-item"><input type="checkbox" id="trig1" value="熬夜"><label>熬夜</label></div>
+<div class="checkbox-item"><input type="checkbox" id="trig2" value="睡太多"><label>睡太多</label></div>
+<div class="checkbox-item"><input type="checkbox" id="trig3" value="睡不够"><label>睡不够</label></div>
+<div class="checkbox-item"><input type="checkbox" id="trig4" value="作息不规律"><label>作息不规律</label></div>
+<div class="checkbox-item"><input type="checkbox" id="trig5" value="压力大"><label>压力大/应激</label></div>
+<div class="checkbox-item"><input type="checkbox" id="trig6" value="光刺激"><label>强光/屏幕</label></div>
+<div class="checkbox-item"><input type="checkbox" id="trig7" value="噪音"><label>噪音</label></div>
+<div class="checkbox-item"><input type="checkbox" id="trig8" value="气味"><label>特殊气味</label></div>
+<div class="checkbox-item"><input type="checkbox" id="trig9" value="天气变化"><label>天气/气压变化</label></div>
+<div class="checkbox-item"><input type="checkbox" id="trig10" value="饥饿"><label>饥饿/禁食</label></div>
+<div class="checkbox-item"><input type="checkbox" id="trig11" value="食物"><label>特定食物</label></div>
+<div class="checkbox-item"><input type="checkbox" id="trig12" value="运动"><label>剧烈运动</label></div>
+<div class="checkbox-item"><input type="checkbox" id="trig13" value="颈部劳累"><label>颈部劳累</label></div>
+</div>
+</div>
+<div class="form-group" style="margin-top:20px;"><label>常规用药</label><input type="text" id="regularMeds" placeholder="如：普萘洛尔、氟桂利嗪等预防性用药"></div>
+<div class="form-group"><label>急救用药</label><input type="text" id="acuteMeds" placeholder="如：布洛芬、曲普坦类等急性期用药"></div>
+<div class="btn-group">
+<button type="button" class="btn btn-primary" onclick="saveProfile()">💾 保存档案</button>
+<button type="button" class="btn btn-secondary" onclick="exportData()">📥 导出数据</button>
+<input type="file" id="importFile" style="display:none" onchange="importData(this)" accept=".json">
+<button type="button" class="btn btn-secondary" onclick="document.getElementById('importFile').click()">📤 导入数据</button>
+</div>
+</form>
+</div>
+</section>
+<section id="new" class="section">
+<form id="recordForm">
+<div class="card">
+<div class="card-title">⏰ 发作前情况（24-48小时）</div>
+<div class="row"><div class="form-group"><label>发作日期 *</label><input type="date" id="attackDate" required></div><div class="form-group"><label>发作时间 *</label><input type="time" id="attackTime" required></div></div>
+<div class="card-title collapsible" onclick="this.classList.toggle('active');this.nextElementSibling.classList.toggle('open')">睡眠情况</div>
+<div class="collapsible-content open">
+<div class="row"><div class="form-group"><label>就寝时间</label><input type="time" id="bedTime"></div><div class="form-group"><label>起床时间</label><input type="time" id="wakeTime"></div></div>
+<div class="row"><div class="form-group"><label>睡眠时长（小时）</label><input type="number" id="sleepDuration" step="0.5" min="0" max="24"></div><div class="form-group"><label>睡眠质量</label><select id="sleepQuality"><option value="good">好</option><option value="normal">一般</option><option value="poor">差</option></select></div></div>
+<div class="checkbox-item"><input type="checkbox" id="stayUpLate"><label>是否熬夜</label></div>
+<div class="checkbox-item"><input type="checkbox" id="tooMuchSleep"><label>是否睡太多</label></div>
+</div>
+<div class="card-title collapsible" onclick="this.classList.toggle('active');this.nextElementSibling.classList.toggle('open')">饮食与环境</div>
+<div class="collapsible-content">
+<div class="form-group"><label>特殊饮食（多选）</label><div class="checkbox-group"><div class="checkbox-item"><input type="checkbox" id="diet1" value="酒精"><label>酒精</label></div><div class="checkbox-item"><input type="checkbox" id="diet2" value="巧克力"><label>巧克力</label></div><div class="checkbox-item"><input type="checkbox" id="diet3" value="咖啡"><label>咖啡/浓茶</label></div><div class="checkbox-item"><input type="checkbox" id="diet4" value="味精"><label>味精/外卖</label></div><div class="checkbox-item"><input type="checkbox" id="diet5" value="奶酪"><label>奶酪</label></div><div class="checkbox-item"><input type="checkbox" id="diet6" value="腌制食品"><label>腌制食品</label></div></div></div>
+<div class="checkbox-item"><input type="checkbox" id="hunger"><label>是否饥饿/未进食早餐</label></div>
+<div class="form-group"><label>环境因素（多选）</label><div class="checkbox-group"><div class="checkbox-item"><input type="checkbox" id="env1" value="长时间看屏幕"><label>长时间看屏幕</label></div><div class="checkbox-item"><input type="checkbox" id="env2" value="强光暴露"><label>强光暴露</label></div><div class="checkbox-item"><input type="checkbox" id="env3" value="嘈杂环境"><label>嘈杂环境</label></div><div class="checkbox-item"><input type="checkbox" id="env4" value="密闭空间"><label>密闭空间</label></div><div class="checkbox-item"><input type="checkbox" id="env5" value="剧烈运动"><label>剧烈运动</label></div><div class="checkbox-item"><input type="checkbox" id="env6" value="情绪波动"><label>情绪波动</label></div><div class="checkbox-item"><input type="checkbox" id="env7" value="天气变化"><label>天气变化</label></div><div class="checkbox-item"><input type="checkbox" id="env8" value="颈部劳累"><label>颈部劳累/姿势不良</label></div></div></div>
+</div>
+</div>
+<div class="card">
+<div class="card-title">💢 发作时详情</div>
+<div class="form-group"><label>先兆症状（如有）</label><select id="aura" onchange="document.getElementById('auraDetail').style.display=this.value!=='none'?'block':'none'"><option value="none">无先兆</option><option value="visual">视觉先兆</option><option value="sensory">感觉异常</option><option value="speech">言语障碍</option><option value="motor">运动无力</option></select><div id="auraDetail" style="display:none; margin-top:10px;"><input type="text" id="auraDesc" placeholder="请描述先兆症状及持续时间（分钟）"></div></div>
+<div class="row"><div class="form-group"><label>疼痛部位 *</label><select id="painLocation" required><option value="">请选择</option><option value="unilateral-left">单侧（左侧）</option><option value="unilateral-right">单侧（右侧）</option><option value="bilateral">双侧</option><option value="forehead">额部</option><option value="temple">颞部</option><option value="eye">眼眶周围</option><option value="occipital">枕部</option><option value="diffuse">弥漫性</option></select></div><div class="form-group"><label>疼痛性质 *</label><select id="painType" required><option value="">请选择</option><option value="throbbing">搏动性/跳痛</option><option value="pressing">压迫感/紧箍感</option><option value="stabbing">刺痛</option><option value="dull">钝痛</option><option value="tearing">撕裂样剧痛（危险信号）</option></select></div></div>
+<div class="form-group"><label>疼痛程度（0-10分）*</label><input type="range" id="painLevel" min="0" max="10" value="5" class="pain-slider" oninput="document.getElementById('painValue').textContent=this.value+'分'"><div class="pain-value" id="painValue">5分</div></div>
+<div class="row"><div class="form-group"><label>持续时间（小时）*</label><input type="number" id="duration" step="0.5" min="0.5" required placeholder="如：4-72小时为典型偏头痛"></div><div class="form-group"><label>缓解时间</label><input type="datetime-local" id="endTime"></div></div>
+<div class="form-group"><label>伴随症状（多选）</label><div class="checkbox-group"><div class="checkbox-item"><input type="checkbox" id="sym1" value="恶心"><label>恶心</label></div><div class="checkbox-item"><input type="checkbox" id="sym2" value="呕吐"><label>呕吐</label></div><div class="checkbox-item"><input type="checkbox" id="sym3" value="畏光"><label>畏光</label></div><div class="checkbox-item"><input type="checkbox" id="sym4" value="畏声"><label>畏声</label></div><div class="checkbox-item"><input type="checkbox" id="sym5" value="流泪/眼红"><label>流泪/眼红</label></div><div class="checkbox-item"><input type="checkbox" id="sym6" value="鼻塞/流涕"><label>鼻塞/流涕</label></div><div class="checkbox-item"><input type="checkbox" id="sym7" value="颈部僵硬"><label>颈部僵硬/疼痛</label></div><div class="checkbox-item"><input type="checkbox" id="sym8" value="头晕"><label>头晕/眩晕</label></div></div></div>
+</div>
+<div class="card">
+<div class="card-title">💊 治疗记录</div>
+<div class="row"><div class="form-group"><label>用药时间（头痛开始后）</label><input type="text" id="medTime" placeholder="如：30分钟/1小时"></div><div class="form-group"><label>药物名称</label><input type="text" id="medName" placeholder="如：布洛芬400mg"></div></div>
+<div class="form-group"><label>给药方式</label><select id="medRoute"><option value="oral">口服</option><option value="nasal">鼻喷剂</option><option value="injection">注射</option><option value="suppository">栓剂</option></select></div>
+<div class="form-group"><label>2小时后效果 *</label><select id="medEffect" required><option value="">请选择</option><option value="complete">完全无痛</option><option value="significant">显著缓解（疼痛减轻≥50%）</option><option value="partial">部分缓解（疼痛减轻<50%）</option><option value="none">无效</option></select></div>
+<div class="checkbox-item"><input type="checkbox" id="recurrence"><label>24小时内复发</label></div>
+</div>
+<div class="card" style="border: 2px solid var(--accent);">
+<div class="card-title" style="color: var(--accent);">⚠️ 危险信号检查（出现以下情况请立即就医）</div>
+<div class="checkbox-group">
+<div class="checkbox-item" style="color: #721c24; font-weight: 500;"><input type="checkbox" id="red1"><label>突发剧烈头痛（"一生中最剧烈的头痛"）</label></div>
+<div class="checkbox-item" style="color: #721c24;"><input type="checkbox" id="red2"><label>伴发热、颈部僵硬</label></div>
+<div class="checkbox-item" style="color: #721c24;"><input type="checkbox" id="red3"><label>伴意识障碍、抽搐、肢体无力、言语不清</label></div>
+<div class="checkbox-item" style="color: #721c24;"><input type="checkbox" id="red4"><label>体位性头痛（站立加重，平躺缓解）</label></div>
+<div class="checkbox-item" style="color: #721c24;"><input type="checkbox" id="red5"><label>头痛性质突然改变或新发的不同以往头痛</label></div>
+</div>
+</div>
+<div class="card">
+<div class="card-title">📝 发作后记录</div>
+<div class="form-group"><label>缓解后状态</label><select id="postStatus"><option value="complete">完全恢复正常</option><option value="residual">仍有残留症状</option><option value="persistent">症状持续无好转</option></select></div>
+<div class="form-group"><label>功能受限程度</label><select id="disability"><option value="none">无影响</option><option value="mild">轻度影响</option><option value="moderate">中度影响</option><option value="severe">重度影响（需卧床）</option></select></div>
+<div class="form-group"><label>备注</label><textarea id="notes" placeholder="记录任何其他观察到的细节"></textarea></div>
+</div>
+<div class="btn-group">
+<button type="button" class="btn btn-primary" onclick="saveRecord()">💾 保存记录</button>
+<button type="button" class="btn btn-secondary" onclick="document.getElementById('recordForm').reset();document.getElementById('painValue').textContent='5分'">🔄 重置</button>
+</div>
+</form>
+</section>
+<section id="history" class="section"><div class="card"><div class="card-title">📚 发作历史记录</div><div id="recordsList"></div></div></section>
+<section id="stats" class="section">
+<div class="stats-grid">
+<div class="stat-card"><div class="stat-label">总发作次数</div><div class="stat-number" id="totalAttacks">0</div></div>
+<div class="stat-card"><div class="stat-label">本月发作</div><div class="stat-number" id="monthAttacks">0</div></div>
+<div class="stat-card"><div class="stat-label">平均疼痛程度</div><div class="stat-number" id="avgPain">0</div></div>
+<div class="stat-card"><div class="stat-label">平均持续时间</div><div class="stat-number" id="avgDuration">0h</div></div>
+</div>
+<div class="card"><div class="card-title">📊 常见诱因统计</div><div id="triggerStats"></div></div>
+<div class="card"><div class="card-title">💊 药物效果分析</div><div id="medStats"></div></div>
+</section>
+</div>
+<div class="modal" id="detailModal"><div class="modal-content"><span class="modal-close" onclick="document.getElementById('detailModal').classList.remove('active')">&times;</span><div id="modalContent"></div></div></div>
+<div class="save-status" id="saveStatus">✓ 保存成功</div>
+<script>
+let profile = JSON.parse(localStorage.getItem('migraineProfile')) || {};
+let records = JSON.parse(localStorage.getItem('migraineRecords')) || [];
+let currentEditId = null;
+window.onload = function() {
+document.getElementById('attackDate').valueAsDate = new Date();
+loadProfile(); updateStats(); renderRecords();
+};
+function showSection(id) {
+document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+document.getElementById(id).classList.add('active');
+event.target.classList.add('active');
+if(id==='stats') updateStats();
+if(id==='history') renderRecords();
+}
+function saveProfile() {
+let triggers = [];
+for(let i=1;i<=13;i++) if(document.getElementById('trig'+i)?.checked) triggers.push(document.getElementById('trig'+i).value);
+profile = {
+onsetAge: document.getElementById('onsetAge').value, historyYears: document.getElementById('historyYears').value,
+headacheType: document.getElementById('headacheType').value, familyHistory: document.getElementById('familyHistory').checked,
+familyDetail: document.getElementById('familyDetailText').value, pastHistory: document.getElementById('pastHistory').value,
+menstrual: document.getElementById('menstrual').value, triggers: triggers,
+regularMeds: document.getElementById('regularMeds').value, acuteMeds: document.getElementById('acuteMeds').value
+};
+localStorage.setItem('migraineProfile', JSON.stringify(profile));
+showSave();
+}
+function loadProfile() {
+if(!profile.onsetAge) return;
+document.getElementById('onsetAge').value = profile.onsetAge || '';
+document.getElementById('historyYears').value = profile.historyYears || '';
+document.getElementById('headacheType').value = profile.headacheType || 'single';
+document.getElementById('familyHistory').checked = profile.familyHistory || false;
+if(profile.familyHistory) document.getElementById('familyDetail').style.display = 'block';
+document.getElementById('familyDetailText').value = profile.familyDetail || '';
+document.getElementById('pastHistory').value = profile.pastHistory || '';
+document.getElementById('menstrual').value = profile.menstrual || 'none';
+document.getElementById('regularMeds').value = profile.regularMeds || '';
+document.getElementById('acuteMeds').value = profile.acuteMeds || '';
+if(profile.triggers) profile.triggers.forEach(t => { for(let i=1;i<=13;i++) { const el=document.getElementById('trig'+i); if(el&&el.value===t) el.checked=true; } });
+}
+function saveRecord() {
+let redFlags = [];
+['red1','red2','red3','red4','red5'].forEach(id => { if(document.getElementById(id).checked) redFlags.push(id); });
+if(redFlags.length > 0 && !confirm('⚠️ 您勾选了危险信号！\\n出现这些情况应立即就医！\\n\\n是否继续保存？')) return;
+let diet=[], env=[], symptoms=[];
+['diet1','diet2','diet3','diet4','diet5','diet6'].forEach(id => { if(document.getElementById(id).checked) diet.push(document.getElementById(id).value); });
+['env1','env2','env3','env4','env5','env6','env7','env8'].forEach(id => { if(document.getElementById(id).checked) env.push(document.getElementById(id).value); });
+['sym1','sym2','sym3','sym4','sym5','sym6','sym7','sym8'].forEach(id => { if(document.getElementById(id).checked) symptoms.push(document.getElementById(id).value); });
+let record = {
+id: currentEditId || Date.now(),
+date: document.getElementById('attackDate').value, time: document.getElementById('attackTime').value,
+sleep: { bedTime: document.getElementById('bedTime').value, wakeTime: document.getElementById('wakeTime').value, duration: document.getElementById('sleepDuration').value, quality: document.getElementById('sleepQuality').value, stayUpLate: document.getElementById('stayUpLate').checked, tooMuchSleep: document.getElementById('tooMuchSleep').checked },
+diet: diet, hunger: document.getElementById('hunger').checked, environment: env,
+aura: document.getElementById('aura').value, painLocation: document.getElementById('painLocation').value,
+painType: document.getElementById('painType').value, painLevel: parseInt(document.getElementById('painLevel').value),
+duration: parseFloat(document.getElementById('duration').value), symptoms: symptoms,
+medication: { name: document.getElementById('medName').value, effect: document.getElementById('medEffect').value },
+redFlags: redFlags, disability: document.getElementById('disability').value, notes: document.getElementById('notes').value
+};
+if(currentEditId) { let idx = records.findIndex(r => r.id === currentEditId); if(idx > -1) records[idx] = record; }
+else records.push(record);
+records.sort((a,b) => new Date(b.date + 'T' + b.time) - new Date(a.date + 'T' + a.time));
+localStorage.setItem('migraineRecords', JSON.stringify(records));
+showSave(); document.getElementById('recordForm').reset(); document.getElementById('painValue').textContent = '5分';
+setTimeout(() => document.querySelector('.nav-btn:nth-child(3)').click(), 500);
+}
+function showSave() { let el = document.getElementById('saveStatus'); el.style.display = 'block'; setTimeout(() => el.style.display = 'none', 2000); }
+function renderRecords() {
+let container = document.getElementById('recordsList');
+if(records.length === 0) { container.innerHTML = '<div class="empty-state"><div style="font-size:48px;margin-bottom:16px;">📝</div><div>暂无记录，请点击"新增记录"添加</div></div>'; return; }
+container.innerHTML = records.map(r => {
+let date = new Date(r.date + 'T' + r.time);
+let dateStr = date.toLocaleString('zh-CN', {month:'long', day:'numeric', hour:'2-digit', minute:'2-digit'});
+let tags = []; if(r.sleep.stayUpLate) tags.push('熬夜'); if(r.sleep.tooMuchSleep) tags.push('睡太多'); if(r.painLevel >= 7) tags.push('重度疼痛');
+return `<div class="record-item" onclick="showDetail(${r.id})"><div class="record-header"><div class="record-date">${dateStr}</div><div class="record-pain">${r.painLevel}分</div></div><div style="color:#666;font-size:14px;margin-bottom:8px;">${r.painLocation} · ${r.painType} · 持续${r.duration}小时</div><div class="record-tags">${tags.map(t => `<span class="tag">${t}</span>`).join('')}${r.symptoms.map(s => `<span class="tag">${s}</span>`).join('')}</div></div>`;
+}).join('');
+}
+function showDetail(id) {
+let r = records.find(x => x.id === id); if(!r) return; currentEditId = id;
+document.getElementById('modalContent').innerHTML = `<h2 style="color:var(--primary);margin-bottom:20px;">发作详情</h2>
+<p><strong>时间：</strong>${r.date} ${r.time}</p><p><strong>疼痛程度：</strong><span style="color:var(--accent);font-size:24px;font-weight:bold;">${r.painLevel}分</span></p>
+<p><strong>部位：</strong>${r.painLocation}</p><p><strong>性质：</strong>${r.painType}</p><p><strong>持续时间：</strong>${r.duration}小时</p>
+<hr style="margin:15px 0;border:none;border-top:1px solid #eee;">
+<p><strong>诱因：</strong>${[...r.diet, ...r.environment].join(', ') || '无记录'}</p><p><strong>伴随症状：</strong>${r.symptoms.join(', ') || '无'}</p>
+<p><strong>用药：</strong>${r.medication.name || '未记录'}（${r.medication.effect}）</p>${r.notes ? `<p><strong>备注：</strong>${r.notes}</p>` : ''}`;
+document.getElementById('detailModal').classList.add('active');
+}
+function updateStats() {
+document.getElementById('totalAttacks').textContent = records.length;
+let now = new Date();
+let thisMonth = records.filter(r => { let d = new Date(r.date); return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear(); }).length;
+document.getElementById('monthAttacks').textContent = thisMonth;
+let avgPain = records.length ? (records.reduce((a,b) => a + b.painLevel, 0) / records.length).toFixed(1) : 0;
+document.getElementById('avgPain').textContent = avgPain;
+let avgDur = records.length ? (records.reduce((a,b) => a + b.duration, 0) / records.length).toFixed(1) : 0;
+document.getElementById('avgDuration').textContent = avgDur + 'h';
+let triggerCount = {}; records.forEach(r => { [...r.diet, ...r.environment].forEach(t => { triggerCount[t] = (triggerCount[t] || 0) + 1; }); });
+let triggerHtml = Object.entries(triggerCount).sort((a,b) => b[1] - a[1]).slice(0, 5).map(([t,c]) => `
+<div style="margin:10px 0;"><div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span>${t}</span><span>${c}次</span></div><div class="progress-bar"><div class="progress-fill" style="width:${(c/records.length*100)}%"></div></div></div>`).join('');
+document.getElementById('triggerStats').innerHTML = triggerHtml || '<p style="color:#999;">暂无数据</p>';
+let medEffects = {}; records.forEach(r => { if(r.medication.effect) medEffects[r.medication.effect] = (medEffects[r.medication.effect] || 0) + 1; });
+let labels = {complete:'完全无痛', significant:'显著缓解', partial:'部分缓解', none:'无效'};
+let medHtml = Object.entries(medEffects).map(([e,c]) => `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee;"><span>${labels[e] || e}</span><span style="font-weight:600;">${c}次</span></div>`).join('');
+document.getElementById('medStats').innerHTML = medHtml || '<p style="color:#999;">暂无数据</p>';
+}
+function exportData() {
+let data = { profile: profile, records: records, exportDate: new Date().toISOString() };
+let blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+let url = URL.createObjectURL(blob);
+let a = document.createElement('a'); a.href = url; a.download = `偏头痛记录_${new Date().toLocaleDateString()}.json`; a.click();
+if(records.length > 0) {
+let headers = ['日期','时间','疼痛程度','部位','性质','持续时间','伴随症状','用药','效果'];
+let csv = [headers.join(','), ...records.map(r => [r.date, r.time, r.painLevel, r.painLocation, r.painType, r.duration, r.symptoms.join(';'), r.medication.name, r.medication.effect].join(','))].join('\n');
+let blob2 = new Blob(['\ufeff' + csv], {type: 'text/csv;charset=utf-8;'});
+let url2 = URL.createObjectURL(blob2);
+let a2 = document.createElement('a'); a2.href = url2; a2.download = `偏头痛记录_${new Date().toLocaleDateString()}.csv`; a2.click();
+}
+}
+function importData(input) {
+let file = input.files[0]; if(!file) return;
+let reader = new FileReader();
+reader.onload = function(e) {
+try {
+let data = JSON.parse(e.target.result);
+if(data.profile) { profile = data.profile; localStorage.setItem('migraineProfile', JSON.stringify(profile)); loadProfile(); }
+if(data.records) { records = data.records; localStorage.setItem('migraineRecords', JSON.stringify(records)); renderRecords(); updateStats(); }
+alert('数据导入成功！');
+} catch(err) { alert('文件格式错误'); }
+};
+reader.readAsText(file); input.value = '';
+}
+</script>
+</body>
+</html>
